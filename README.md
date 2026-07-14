@@ -34,9 +34,9 @@ We did not create OKF. We use it. Our data follows OKF v0.1 ([spec](https://gith
 
 Three ways to explore the same canonical data — because one representation is never enough:
 
-- **[Dashboard Overview](https://al-dente.dev)** — Stats, trends, and directional insights at a glance.
-- **[Searchable Register](https://al-dente.dev/register.html)** — Filter, sort, and search every MCP server and skill in the register.
-- **[Knowledge Graph](https://al-dente.dev/graph.html)** — Interactive graph of entities, relations, and emergent patterns.
+- **[Dashboard Overview](https://al-dente-processes.github.io/al-dente/)** — Stats, trends, and directional insights at a glance.
+- **[Searchable Register](https://al-dente-processes.github.io/al-dente/register.html)** — Filter, sort, and search every MCP server and skill in the register.
+- **[Knowledge Graph](https://al-dente-processes.github.io/al-dente/graph.html)** — Interactive graph of entities, relations, and emergent patterns.
 
 *(Views are generated from the same OKF source. Add a new view by contributing a generator script in `pipeline/views/`.)*
 
