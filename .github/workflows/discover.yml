@@ -12,6 +12,11 @@
 name: Discover MCP Servers
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/discover.yml"
+      - "pipeline/discover/**"
   schedule:
     # Every Sunday at 02:00 UTC (2 hours before the build to allow PR review)
     - cron: "0 2 * * 0"
@@ -110,11 +115,12 @@ jobs:
             echo "EOF" >> "$GITHUB_OUTPUT"
           fi
 
-      # 6. Commit changes (on schedule or manual non-dry-run)
+      # 6. Commit changes (on schedule or manual dispatch only — NOT on push)
       - name: Commit new servers
         if: |
           steps.git-check.outputs.changed == 'true' &&
-          github.event.inputs.dry_run != 'true'
+          github.event.inputs.dry_run != 'true' &&
+          github.event_name != 'push'
         run: |
           git config user.name "al-dente-bot"
           git config user.email "bot@al-dente.dev"
