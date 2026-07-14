@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="al-dente - A living register of MCP Servers and Skills. Precise. Data-first. GitHub-native.">
+  <title>al-dente — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <!-- Shared Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="site-brand">
+        <a href="index.html" class="site-brand__name" aria-label="al-dente home">al-dente</a>
+        <span class="site-brand__tagline">Precise. Data-first. GitHub-native.</span>
+      </div>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="index.html" class="site-nav__link site-nav__link--active" aria-current="page">Dashboard</a>
+        <a href="register.html" class="site-nav__link">Register</a>
+        <a href="graph.html" class="site-nav__link">Graph</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero / Stats Section -->
+    <section class="section">
+      <div class="container">
+        <div class="grid-stats" id="statsGrid" role="region" aria-label="Statistics">
+          <!-- Stat cards injected by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Servers -->
+    <section class="section">
+      <div class="container">
+        <div class="section__header">
+          <div>
+            <h2 class="section__title">Featured Servers</h2>
+            <p class="section__subtitle">Top MCP servers by stars and verification</p>
+          </div>
+          <a href="register.html?type=MCP-Server" class="badge badge--type-server" style="text-decoration:none;">View All →</a>
+        </div>
+        <div class="grid-servers" id="serversGrid" role="list" aria-label="Featured servers">
+          <!-- Server cards injected by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Skills -->
+    <section class="section">
+      <div class="container">
+        <div class="section__header">
+          <div>
+            <h2 class="section__title">Featured Skills</h2>
+            <p class="section__subtitle">Core capabilities realized by MCP servers</p>
+          </div>
+          <a href="register.html?type=Skill" class="badge badge--type-skill" style="text-decoration:none;">View All →</a>
+        </div>
+        <div class="grid-skills" id="skillsGrid" role="list" aria-label="Featured skills">
+          <!-- Skill cards injected by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="section">
+      <div class="container">
+        <div class="section__header">
+          <div>
+            <h2 class="section__title">Categories</h2>
+            <p class="section__subtitle">Browse by domain</p>
+          </div>
+        </div>
+        <div class="grid-categories" id="categoriesGrid" role="list" aria-label="Categories">
+          <!-- Category pills injected by JS -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p class="site-footer__text">
+        al-dente v0.1 — To the tooth.
+        <a href="https://github.com" class="site-footer__link" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

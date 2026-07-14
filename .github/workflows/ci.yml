@@ -1,0 +1,87 @@
+# CI workflow for the al-dente project.
+#
+# Validates OKF data integrity on every pull request and push to main.
+# Checks that all required YAML fields are present and that relation
+# references point to existing entities.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Prevent overlapping runs.
+concurrency:
+  group: "ci-${{ github.ref }}"
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  validate:
+    name: Validate OKF Data
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Set up Python 3.11.
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3. Install dependencies.
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4. Validate OKF data integrity.
+      - name: Validate OKF data
+        id: validate
+        run: |
+          python -m pipeline.build_okf \
+            --input data \
+            --output /tmp/okf-validation \
+            --validate-only
+
+      # 5. Run Python tests if they exist.
+      - name: Run tests
+        run: |
+          if [ -d tests ] || [ -f tests/test_*.py ]; then
+            pip install pytest
+            pytest tests/ -v
+          else
+            echo "No tests directory found; skipping test step."
+          fi
+
+      # 6. Report status back to PR (only on PR events).
+      - name: Report status
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const validateOutcome = '${{ steps.validate.outcome }}';
+            const overallStatus = validateOutcome === 'success' ? 'success' : 'failure';
+            const description = overallStatus === 'success'
+              ? 'OKF validation passed'
+              : 'OKF validation failed';
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state: overallStatus,
+              context: 'al-dente / validate-okf',
+              description: description,
+            });

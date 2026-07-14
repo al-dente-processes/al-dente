@@ -1,0 +1,393 @@
+# ============================================================================
+# OKF Schema Definition — al-dente Project
+# ============================================================================
+# Open Knowledge Format (OKF) schema for the agentic engineering ecosystem.
+# Each entity is stored as a Markdown file with YAML frontmatter.
+# ============================================================================
+
+schema:
+  name: al-dente-okf
+  version: "1.0.0"
+  description: >-
+    OKF schema for MCP Servers, Skills, Categories, Agentic Patterns, and Publishers
+    in the agentic engineering ecosystem.
+
+# ----------------------------------------------------------------------------
+# Entity Types
+# ----------------------------------------------------------------------------
+entity_types:
+
+  # --------------------------------------------------------------------------
+  # MCP-Server
+  # --------------------------------------------------------------------------
+  MCP-Server:
+    description: >-
+      A Model Context Protocol server that exposes tools, resources, and prompts
+      to AI agents via standardized transport mechanisms.
+    required_fields:
+      - type
+      - id
+      - name
+      - publisher
+      - transport
+      - install
+      - capabilities
+      - stars
+      - last_updated
+      - verified
+      - tier
+      - categories
+      - skills_realized
+      - relations
+      - license
+      - source_url
+      - homepage
+      - description
+    fields:
+      type:
+        type: string
+        const: MCP-Server
+        description: Entity type discriminator.
+      id:
+        type: string
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        description: Stable kebab-case identifier. Must be unique across all entities.
+      name:
+        type: string
+        description: Human-readable display name.
+      publisher:
+        type: string
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        description: Publisher ID referencing a Publisher entity.
+      transport:
+        type: string
+        enum: [stdio, http, sse, websocket]
+        description: Communication protocol used by the server.
+      install:
+        type: object
+        properties:
+          type:
+            type: string
+            enum: [npm, pip, docker, source]
+          command:
+            type: string
+        required: [type, command]
+        description: Installation method and command.
+      capabilities:
+        type: object
+        properties:
+          tools:
+            type: array
+            items: {type: string}
+            description: List of tool names exposed by the server.
+          resources:
+            type: array
+            items: {type: string}
+            description: List of resource names exposed by the server.
+          prompts:
+            type: array
+            items: {type: string}
+            description: List of prompt names exposed by the server.
+        description: Capabilities exposed by the MCP server.
+      stars:
+        type: integer
+        minimum: 0
+        description: GitHub star count (approximate).
+      last_updated:
+        type: string
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        description: Date of last meaningful update (YYYY-MM-DD).
+      verified:
+        type: boolean
+        description: Whether the server has been verified by maintainers.
+      tier:
+        type: string
+        enum: [Official, Verified, Community, Experimental]
+        description: Quality and trust tier.
+      categories:
+        type: array
+        items:
+          type: string
+          pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        description: Category IDs this server belongs to.
+      skills_realized:
+        type: array
+        items:
+          type: string
+          pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        description: Skill IDs this server realizes.
+      relations:
+        type: object
+        properties:
+          exposes:
+            type: array
+            items: {type: string}
+            description: Entity IDs exposed by this server.
+          belongs_to:
+            type: array
+            items: {type: string}
+            description: Category IDs this server belongs to.
+          commonly_composed_with:
+            type: array
+            items: {type: string}
+            description: MCP server IDs commonly used with this server.
+          realizes_skills:
+            type: array
+            items: {type: string}
+            description: Skill IDs realized by this server.
+        description: Semantic relationships to other entities.
+      license:
+        type: string
+        description: Software license (e.g., MIT, Apache-2.0).
+      source_url:
+        type: string
+        format: uri
+        description: URL to source code repository.
+      homepage:
+        type: string
+        format: uri
+        description: URL to project homepage or documentation.
+      description:
+        type: string
+        format: markdown
+        description: Markdown body describing the server.
+
+  # --------------------------------------------------------------------------
+  # Skill
+  # --------------------------------------------------------------------------
+  Skill:
+    description: >-
+      An abstract capability that MCP servers can realize. Skills form a
+      taxonomy from broad domains (level 1) to specific techniques (level 5).
+    required_fields:
+      - type
+      - id
+      - name
+      - taxonomy
+      - level
+      - parent
+      - categories
+      - relations
+      - description
+    fields:
+      type:
+        type: string
+        const: Skill
+      id:
+        type: string
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        description: Stable kebab-case identifier.
+      name:
+        type: string
+        description: Human-readable skill name.
+      taxonomy:
+        type: string
+        description: Taxonomy this skill belongs to (e.g., "os-taxonomy", "al-dente-core").
+      level:
+        type: integer
+        minimum: 1
+        maximum: 5
+        description: Taxonomic level (1=broad domain, 5=specific technique).
+      parent:
+        type: ["string", "null"]
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        description: Parent skill ID or null for root skills.
+      categories:
+        type: array
+        items:
+          type: string
+          pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        description: Category IDs this skill relates to.
+      relations:
+        type: object
+        properties:
+          realized_by:
+            type: array
+            items: {type: string}
+            description: MCP server IDs that realize this skill.
+          belongs_to:
+            type: array
+            items: {type: string}
+            description: Category IDs this skill belongs to.
+          related_to:
+            type: array
+            items: {type: string}
+            description: Related skill IDs.
+        description: Semantic relationships.
+      description:
+        type: string
+        format: markdown
+        description: Markdown body describing the skill.
+
+  # --------------------------------------------------------------------------
+  # Category
+  # --------------------------------------------------------------------------
+  Category:
+    description: >-
+      A thematic grouping for MCP servers and skills. Categories form a
+      hierarchical tree via the parent field.
+    required_fields:
+      - type
+      - id
+      - name
+      - parent
+      - description
+    fields:
+      type:
+        type: string
+        const: Category
+      id:
+        type: string
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+      name:
+        type: string
+      parent:
+        type: ["string", "null"]
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        description: Parent category ID or null for root categories.
+      description:
+        type: string
+        format: markdown
+
+  # --------------------------------------------------------------------------
+  # Agentic-Pattern
+  # --------------------------------------------------------------------------
+  Agentic-Pattern:
+    description: >-
+      A recurring design pattern in agentic systems — how multiple MCP servers,
+      skills, and agents compose to solve problems.
+    required_fields:
+      - type
+      - id
+      - name
+      - description
+      - examples
+      - relations
+    fields:
+      type:
+        type: string
+        const: Agentic-Pattern
+      id:
+        type: string
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+      name:
+        type: string
+      description:
+        type: string
+        format: markdown
+      examples:
+        type: array
+        items: {type: string}
+        description: Entity IDs that exemplify this pattern.
+      relations:
+        type: object
+        properties:
+          exemplified_by:
+            type: array
+            items: {type: string}
+          related_to:
+            type: array
+            items: {type: string}
+
+  # --------------------------------------------------------------------------
+  # Publisher
+  # --------------------------------------------------------------------------
+  Publisher:
+    description: >-
+      An organization, company, or individual that publishes and maintains
+      MCP servers.
+    required_fields:
+      - type
+      - id
+      - name
+      - type_org
+      - links
+      - relations
+    fields:
+      type:
+        type: string
+        const: Publisher
+      id:
+        type: string
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+      name:
+        type: string
+      type_org:
+        type: string
+        enum: [Official, Community, Individual]
+        description: Type of publishing organization.
+      links:
+        type: object
+        properties:
+          github:
+            type: string
+            format: uri
+          website:
+            type: string
+            format: uri
+        description: External links.
+      relations:
+        type: object
+        properties:
+          publishes:
+            type: array
+            items: {type: string}
+            description: MCP server IDs published.
+          maintains:
+            type: array
+            items: {type: string}
+            description: MCP server IDs actively maintained.
+
+# ----------------------------------------------------------------------------
+# Relation Types (global registry)
+# ----------------------------------------------------------------------------
+relation_types:
+  exposes:
+    domain: [MCP-Server]
+    range: [MCP-Server, Skill, Category]
+    description: Server exposes tools/resources/prompts related to entity.
+  belongs_to:
+    domain: [MCP-Server, Skill]
+    range: [Category]
+    description: Entity is categorized under.
+  commonly_composed_with:
+    domain: [MCP-Server]
+    range: [MCP-Server]
+    description: Servers frequently used together.
+  realizes_skills:
+    domain: [MCP-Server]
+    range: [Skill]
+    description: Server provides concrete implementation of skill.
+  realized_by:
+    domain: [Skill]
+    range: [MCP-Server]
+    inverse_of: realizes_skills
+    description: Skill is implemented by server.
+  related_to:
+    domain: [Skill, Agentic-Pattern]
+    range: [Skill, Agentic-Pattern]
+    symmetric: true
+    description: General symmetric relationship.
+  exemplified_by:
+    domain: [Agentic-Pattern]
+    range: [MCP-Server, Skill]
+    description: Pattern is demonstrated by entity.
+  publishes:
+    domain: [Publisher]
+    range: [MCP-Server]
+    description: Publisher releases and distributes server.
+  maintains:
+    domain: [Publisher]
+    range: [MCP-Server]
+    description: Publisher actively maintains server.
+
+# ----------------------------------------------------------------------------
+# Validation Rules
+# ----------------------------------------------------------------------------
+validation:
+  id_uniqueness: true
+  required_field_presence: true
+  relation_integrity: warn
+  enum_value_check: true
+  date_format_check: true
+  url_format_check: true

@@ -1,0 +1,9 @@
+# Jekyll configuration for GitHub Pages
+# We serve static HTML/CSS/JS directly — minimal Jekyll processing.
+# The interactive views are built by the pipeline and committed to docs/.
+
+include:
+  - assets
+
+title: "al-dente"
+description: "The living register of the agentic engineering ecosystem"

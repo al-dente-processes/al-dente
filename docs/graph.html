@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="al-dente Knowledge Graph - Visual exploration of MCP servers, skills, and relationships.">
+  <title>al-dente — Knowledge Graph</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <!-- Shared Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="site-brand">
+        <a href="index.html" class="site-brand__name" aria-label="al-dente home">al-dente</a>
+        <span class="site-brand__tagline">Precise. Data-first. GitHub-native.</span>
+      </div>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="index.html" class="site-nav__link">Dashboard</a>
+        <a href="register.html" class="site-nav__link">Register</a>
+        <a href="graph.html" class="site-nav__link site-nav__link--active" aria-current="page">Graph</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Graph Container -->
+    <div class="graph-container" id="graphContainer" role="img" aria-label="Interactive knowledge graph of MCP entities and their relationships">
+      <!-- SVG injected by D3 -->
+
+      <!-- Control Panel -->
+      <div class="graph-controls" id="graphControls" role="region" aria-label="Graph controls">
+        <div class="graph-controls__title">Controls</div>
+
+        <!-- Search -->
+        <div class="graph-controls__group">
+          <div class="graph-controls__group-title">Search Node</div>
+          <div class="search-bar" style="max-width: 100%;">
+            <span class="search-bar__icon" aria-hidden="true" style="left: 12px;">🔍</span>
+            <input
+              type="search"
+              class="search-bar__input"
+              id="graphSearch"
+              placeholder="Find node..."
+              aria-label="Search graph nodes"
+              style="padding-left: 36px; font-size: 14px;"
+              autocomplete="off"
+            >
+          </div>
+        </div>
+
+        <!-- Entity Type Filters -->
+        <div class="graph-controls__group">
+          <div class="graph-controls__group-title">Entity Types</div>
+          <label class="graph-controls__checkbox">
+            <input type="checkbox" id="filterServer" checked aria-label="Show MCP Servers">
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--graph-server);display:inline-block;"></span>
+              MCP Servers
+            </span>
+          </label>
+          <label class="graph-controls__checkbox">
+            <input type="checkbox" id="filterSkill" checked aria-label="Show Skills">
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;border-radius:3px;background:var(--graph-skill);display:inline-block;"></span>
+              Skills
+            </span>
+          </label>
+          <label class="graph-controls__checkbox">
+            <input type="checkbox" id="filterCategory" checked aria-label="Show Categories">
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:12px;height:10px;background:var(--graph-category);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:inline-block;"></span>
+              Categories
+            </span>
+          </label>
+          <label class="graph-controls__checkbox">
+            <input type="checkbox" id="filterPattern" checked aria-label="Show Patterns">
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;background:var(--graph-pattern);transform:rotate(45deg);display:inline-block;"></span>
+              Patterns
+            </span>
+          </label>
+          <label class="graph-controls__checkbox">
+            <input type="checkbox" id="filterPublisher" checked aria-label="Show Publishers">
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;border-radius:2px;background:var(--graph-publisher);display:inline-block;"></span>
+              Publishers
+            </span>
+          </label>
+        </div>
+
+        <!-- Tier Filters -->
+        <div class="graph-controls__group">
+          <div class="graph-controls__group-title">Tiers</div>
+          <label class="graph-controls__checkbox">
+            <input type="checkbox" id="tierOfficial" checked> Official
+          </label>
+          <label class="graph-controls__checkbox">
+            <input type="checkbox" id="tierVerified" checked> Verified
+          </label>
+          <label class="graph-controls__checkbox">
+            <input type="checkbox" id="tierCommunity" checked> Community
+          </label>
+          <label class="graph-controls__checkbox">
+            <input type="checkbox" id="tierExperimental" checked> Experimental
+          </label>
+        </div>
+
+        <!-- Actions -->
+        <div class="graph-controls__group">
+          <button class="pill" id="resetView" style="width:100%;justify-content:center;">
+            Reset View
+          </button>
+        </div>
+
+        <!-- Legend -->
+        <div class="graph-controls__group">
+          <div class="graph-controls__group-title">Shapes</div>
+          <div class="graph-legend">
+            <div class="legend-item">
+              <svg class="legend-item__shape" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="var(--graph-server)"/></svg>
+              Server
+            </div>
+            <div class="legend-item">
+              <svg class="legend-item__shape" viewBox="0 0 12 12"><rect x="1" y="2" width="10" height="8" rx="2" fill="var(--graph-skill)"/></svg>
+              Skill
+            </div>
+            <div class="legend-item">
+              <svg class="legend-item__shape" viewBox="0 0 12 12"><polygon points="6,0.5 11,3.5 11,8.5 6,11.5 1,8.5 1,3.5" fill="var(--graph-category)"/></svg>
+              Category
+            </div>
+            <div class="legend-item">
+              <svg class="legend-item__shape" viewBox="0 0 12 12"><polygon points="6,0.5 11.5,6 6,11.5 0.5,6" fill="var(--graph-pattern)"/></svg>
+              Pattern
+            </div>
+            <div class="legend-item">
+              <svg class="legend-item__shape" viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" rx="1" fill="var(--graph-publisher)"/></svg>
+              Publisher
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tooltip -->
+      <div class="graph-tooltip" id="graphTooltip" role="tooltip"></div>
+
+      <!-- Detail Card -->
+      <div class="graph-detail-card" id="graphDetailCard" style="display:none;" role="dialog" aria-label="Node details">
+        <div class="graph-detail-card__header">
+          <h3 class="graph-detail-card__title" id="graphDetailTitle">Node</h3>
+          <button class="graph-detail-card__close" id="graphDetailClose" aria-label="Close details">×</button>
+        </div>
+        <div id="graphDetailContent"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/graph.js"></script>
+</body>
+</html>

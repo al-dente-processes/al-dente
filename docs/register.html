@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="al-dente Register - Searchable directory of MCP Servers and Skills.">
+  <title>al-dente — Register</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <!-- Shared Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="site-brand">
+        <a href="index.html" class="site-brand__name" aria-label="al-dente home">al-dente</a>
+        <span class="site-brand__tagline">Precise. Data-first. GitHub-native.</span>
+      </div>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="index.html" class="site-nav__link">Dashboard</a>
+        <a href="register.html" class="site-nav__link site-nav__link--active" aria-current="page">Register</a>
+        <a href="graph.html" class="site-nav__link">Graph</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-header__title">Register</h1>
+      <p class="page-header__description">Search and explore all MCP servers, skills, and categories.</p>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar" role="search" aria-label="Register search">
+      <span class="search-bar__icon" aria-hidden="true">🔍</span>
+      <input
+        type="search"
+        class="search-bar__input"
+        id="searchInput"
+        placeholder="Search by name, description, or publisher..."
+        aria-label="Search register"
+        autocomplete="off"
+      >
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar" role="group" aria-label="Tier filters">
+      <span class="filter-bar__label">Tier</span>
+      <button class="pill pill--active" data-filter-tier="all" aria-pressed="true">All</button>
+      <button class="pill" data-filter-tier="Official" aria-pressed="false">Official</button>
+      <button class="pill" data-filter-tier="Verified" aria-pressed="false">Verified</button>
+      <button class="pill" data-filter-tier="Community" aria-pressed="false">Community</button>
+      <button class="pill" data-filter-tier="Experimental" aria-pressed="false">Experimental</button>
+    </div>
+
+    <div class="filter-bar" role="group" aria-label="Type filters">
+      <span class="filter-bar__label">Type</span>
+      <button class="pill pill--active" data-filter-type="all" aria-pressed="true">All</button>
+      <button class="pill" data-filter-type="MCP-Server" aria-pressed="false">Servers</button>
+      <button class="pill" data-filter-type="Skill" aria-pressed="false">Skills</button>
+      <button class="pill" data-filter-type="Category" aria-pressed="false">Categories</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap" role="region" aria-label="Register table" tabindex="0">
+      <table class="data-table" id="registerTable">
+        <thead>
+          <tr>
+            <th scope="col" data-sort="name">Name <span class="sort-indicator">↕</span></th>
+            <th scope="col" data-sort="type">Type <span class="sort-indicator">↕</span></th>
+            <th scope="col" data-sort="publisher">Publisher <span class="sort-indicator">↕</span></th>
+            <th scope="col" data-sort="tier">Tier <span class="sort-indicator">↕</span></th>
+            <th scope="col" data-sort="stars">Stars <span class="sort-indicator">↕</span></th>
+            <th scope="col" data-sort="capabilities">Capabilities <span class="sort-indicator">↕</span></th>
+            <th scope="col" data-sort="last_updated">Updated <span class="sort-indicator">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Rows injected by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination" role="navigation" aria-label="Table pagination">
+      <!-- Pagination injected by JS -->
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel__backdrop" id="detailBackdrop" aria-hidden="true"></div>
+    <aside class="detail-panel" id="detailPanel" aria-hidden="true" aria-label="Entity details">
+      <div class="detail-panel__header">
+        <div>
+          <h2 class="detail-panel__title" id="detailTitle">Entity Name</h2>
+          <div class="detail-panel__meta" id="detailMeta"></div>
+        </div>
+        <button class="detail-panel__close" id="detailClose" aria-label="Close details">×</button>
+      </div>
+      <div id="detailContent">
+        <!-- Detail content injected by JS -->
+      </div>
+    </aside>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p class="site-footer__text">
+        al-dente v0.1 — To the tooth.
+        <a href="https://github.com" class="site-footer__link" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/register.js"></script>
+</body>
+</html>
