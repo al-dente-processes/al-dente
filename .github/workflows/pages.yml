@@ -1,12 +1,12 @@
-# GitHub Actions workflow to build OKF bundles and deploy documentation to GitHub Pages.
+# GitHub Actions workflow to build OKF bundles and deploy to GitHub Pages.
 #
-# Triggers:
+# This workflow is triggered by:
 #   - Push to main that touches data, ontology, pipeline, or docs
+#   - Merged pull requests (including auto-discovery PRs)
 #   - Manual workflow dispatch
-#   - Weekly schedule (Sundays at 00:00 UTC)
 #
-# The workflow builds the OKF bundle, generates views, and deploys the docs/ folder
-# to GitHub Pages using the modern actions/deploy-pages action.
+# It does NOT discover new servers — that's handled by discover.yml.
+# This workflow only builds OKF bundles, generates views, and deploys.
 
 name: Build and Deploy Pages
 
@@ -19,11 +19,8 @@ on:
       - "pipeline/**"
       - "docs/**"
   workflow_dispatch:
-  schedule:
-    # Every Sunday at 00:00 UTC
-    - cron: "0 0 * * 0"
 
-# Prevent overlapping runs — queue by branch, cancel in-progress runs.
+# Prevent overlapping runs
 concurrency:
   group: "pages-${{ github.ref }}"
   cancel-in-progress: true
@@ -39,43 +36,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository with full git history.
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2. Set up Python 3.11.
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # 3. Install dependencies.
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4. Run OKF builder.
+      - name: Validate OKF data
+        run: |
+          python -m pipeline.build_okf \
+            --input data \
+            --output /tmp/okf_validation \
+            --validate-only
+        # Fail the build if OKF data is invalid
+
       - name: Build OKF bundle
         run: |
           python -m pipeline.build_okf \
             --input data \
             --output docs/assets/js
 
-      # 5. Generate views.
       - name: Generate views
         run: |
           python -m pipeline.views.generate_views \
             --input data \
             --output docs
 
-      # 6. Upload docs/ as a Pages artifact.
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: docs
+
+      - name: Summary
+        run: |
+          echo "## Build Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- OKF bundle: \`docs/assets/js/okf_data.js\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Views generated in \`docs/\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Trigger: ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
     name: Deploy to GitHub Pages
@@ -87,7 +94,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      # 7. Deploy to GitHub Pages.
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

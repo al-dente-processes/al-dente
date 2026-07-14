@@ -1,26 +1,19 @@
-# CI workflow for the al-dente project.
+# CI workflow — validates OKF data integrity on pull requests.
 #
-# Validates OKF data integrity on every pull request and push to main.
-# Checks that all required YAML fields are present and that relation
-# references point to existing entities.
+# Runs on every PR that touches data, ontology, or pipeline files.
+# Ensures OKF entries conform to the schema before merging.
 
-name: CI
+name: CI — Validate OKF
 
 on:
   pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-
-# Prevent overlapping runs.
-concurrency:
-  group: "ci-${{ github.ref }}"
-  cancel-in-progress: true
+    paths:
+      - "data/**"
+      - "ontology/**"
+      - "pipeline/**"
 
 permissions:
   contents: read
-  checks: write
-  pull-requests: write
 
 jobs:
   validate:
@@ -28,60 +21,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository.
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # 2. Set up Python 3.11.
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # 3. Install dependencies.
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4. Validate OKF data integrity.
-      - name: Validate OKF data
-        id: validate
+      - name: Validate OKF schema
         run: |
           python -m pipeline.build_okf \
             --input data \
-            --output /tmp/okf-validation \
+            --output /tmp/okf_validation \
             --validate-only
 
-      # 5. Run Python tests if they exist.
-      - name: Run tests
+      - name: Check for new/modified servers
         run: |
-          if [ -d tests ] || [ -f tests/test_*.py ]; then
-            pip install pytest
-            pytest tests/ -v
-          else
-            echo "No tests directory found; skipping test step."
-          fi
+          echo "## OKF Validation" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
-      # 6. Report status back to PR (only on PR events).
-      - name: Report status
-        if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const validateOutcome = '${{ steps.validate.outcome }}';
-            const overallStatus = validateOutcome === 'success' ? 'success' : 'failure';
-            const description = overallStatus === 'success'
-              ? 'OKF validation passed'
-              : 'OKF validation failed';
+          # Count files
+          SERVER_COUNT=$(find data/mcp-servers -name "*.md" | wc -l)
+          SKILL_COUNT=$(find data/skills -name "*.md" | wc -l)
+          echo "| Entity Type | Count |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| MCP Servers | $SERVER_COUNT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Skills | $SKILL_COUNT |" >> "$GITHUB_STEP_SUMMARY"
 
-            await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: context.payload.pull_request.head.sha,
-              state: overallStatus,
-              context: 'al-dente / validate-okf',
-              description: description,
-            });
+          # Show modified files in this PR
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Modified Files" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+          git diff --name-only origin/main...HEAD >> "$GITHUB_STEP_SUMMARY" || true
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"

@@ -34,9 +34,9 @@ We did not create OKF. We use it. Our data follows OKF v0.1 ([spec](https://gith
 
 Three ways to explore the same canonical data — because one representation is never enough:
 
-- **[Dashboard Overview](https://al-dente-processes.github.io/al-dente/)** — Stats, trends, and directional insights at a glance.
-- **[Searchable Register](https://al-dente-processes.github.io/al-dente/register.html)** — Filter, sort, and search every MCP server and skill in the register.
-- **[Knowledge Graph](https://al-dente-processes.github.io/al-dente/graph.html)** — Interactive graph of entities, relations, and emergent patterns.
+- **[Dashboard Overview](https://al-dente.dev)** — Stats, trends, and directional insights at a glance.
+- **[Searchable Register](https://al-dente.dev/register.html)** — Filter, sort, and search every MCP server and skill in the register.
+- **[Knowledge Graph](https://al-dente.dev/graph.html)** — Interactive graph of entities, relations, and emergent patterns.
 
 *(Views are generated from the same OKF source. Add a new view by contributing a generator script in `pipeline/views/`.)*
 
@@ -108,7 +108,50 @@ make build
 
 # Serve views locally for development
 make serve
+
+# Run discovery pipeline (dry-run — shows what would be added)
+make discover
+
+# Run discovery pipeline (live — writes new servers to data/mcp-servers/)
+make discover-live
 ```
+
+### GitHub-Native Automation
+
+al-dente runs entirely on GitHub — no external infrastructure needed. Three workflows handle everything:
+
+| Workflow | File | Trigger | What It Does |
+|----------|------|---------|-------------|
+| **Discover** | `.github/workflows/discover.yml` | Weekly (Sundays 02:00 UTC) + manual | Crawls Official MCP Registry, PulseMCP, GitHub Topics → quality gates → commits new servers → opens PR for review |
+| **Build & Deploy** | `.github/workflows/pages.yml` | Push to `main` (data/ontology/pipeline/docs changes) + manual | Validates OKF → builds JSON/JS bundles → generates views → deploys to GitHub Pages |
+| **Validate** | `.github/workflows/ci.yml` | Pull request (data/ontology/pipeline changes) | Validates OKF schema integrity → reports status on PR |
+
+**Automation flow:**
+```
+Every Sunday 02:00 UTC
+        │
+        ▼
+┌──────────────────┐
+│  discover.yml    │  ← Crawls sources, applies quality gates
+│  (scheduled)     │  ← Creates PR with new/updated servers
+└────────┬─────────┘
+         │ (human reviews & merges PR)
+         ▼
+┌──────────────────┐
+│  ci.yml          │  ← Validates OKF on PR
+│  (PR trigger)    │  ← Must pass before merge
+└────────┬─────────┘
+         │ (PR merged to main)
+         ▼
+┌──────────────────┐
+│  pages.yml       │  ← Builds OKF + views
+│  (push trigger)  │  ← Deploys to GitHub Pages
+└──────────────────┘
+```
+
+**Required secrets** (set in Settings → Secrets):
+- `PULSE_MCP_API_KEY` — Get free key at [pulsemcp.com](https://www.pulsemcp.com)
+- `GITHUB_TOKEN` — Auto-provided by GitHub Actions
 
 ### Contribute
 

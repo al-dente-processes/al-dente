@@ -21,15 +21,32 @@ help:
 	@echo ""
 	@echo "Available targets:"
 	@echo "  make install   Install Python dependencies"
+	@echo "  make discover  Run discovery pipeline (find new MCP servers)"
 	@echo "  make build     Build OKF bundle from source data"
+	@echo "  make views     Generate documentation views"
 	@echo "  make serve     Serve docs/ locally on port $(DOCS_PORT)"
 	@echo "  make clean     Remove generated files"
 	@echo "  make test      Run validation and tests"
+	@echo "  make all       Full pipeline: build + views"
 
 ## Install Python dependencies
 install:
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
+
+## Run discovery pipeline (local dry-run by default)
+discover:
+	@echo "Running discovery pipeline (dry-run)..."
+	@echo "For live run: make discover-live"
+	$(PYTHON) -m pipeline.discover.runner \
+		--preset balanced \
+		--dry-run
+
+## Run discovery pipeline (live — writes to data/mcp-servers/)
+discover-live:
+	@echo "Running discovery pipeline (LIVE — will write files)..."
+	$(PYTHON) -m pipeline.discover.runner \
+		--preset balanced
 
 ## Build OKF bundle
 build:
