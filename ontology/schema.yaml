@@ -1,8 +1,13 @@
 # ============================================================================
-# OKF Schema Definition — al-dente Project
+# al-dente Domain Schema — Extension of OKF v0.1
 # ============================================================================
-# Open Knowledge Format (OKF) schema for the agentic engineering ecosystem.
-# Each entity is stored as a Markdown file with YAML frontmatter.
+# This schema defines al-dente's domain-specific entity types, fields, and
+# relations that extend Google's Open Knowledge Format (OKF) v0.1 for the
+# agentic engineering ecosystem.
+#
+# OKF base spec (Google Cloud): requires only a `type` field per concept.
+# Everything in this file is our domain-specific layer on top.
+# https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
 # ============================================================================
 
 schema:

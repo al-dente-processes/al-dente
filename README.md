@@ -10,13 +10,23 @@
 
 ## What is al-dente?
 
-**al-dente** is the living register of the agentic engineering ecosystem. It maps the two things that matter most right now — **MCP Servers** and **Skills** — as plain Markdown files with YAML frontmatter. We call this the [Open Knowledge Format (OKF)](spec.md), and it means the data *is* the product.
+**al-dente** is the living register of the agentic engineering ecosystem. It maps the two things that matter most right now — **MCP Servers** and **Skills** — as a curated OKF bundle: plain Markdown files with YAML frontmatter, stored in a GitHub repository.
 
-No walled gardens. No APIs to rate-limit you. No opaque databases. Just a GitHub repository full of structured, versioned, human-readable knowledge that happens to be trivially ingestible by agents. Every MCP server, every skill taxonomy, every relationship between what agents *can do* and the tools that make it possible — tracked as diffable files you can `cat`, `grep`, or feed straight into Claude.
+No walled gardens. No APIs to rate-limit you. No opaque databases. Just structured, versioned, human-readable knowledge that happens to be trivially ingestible by agents. Every MCP server, every skill taxonomy, every relationship between what agents *can do* and the tools that make it possible — tracked as diffable files you can `cat`, `grep`, or feed straight into Claude.
 
 This is the map the agentic community doesn't have yet. The ecosystem is growing explosively — MCP has become the de facto "USB-C for AI agents" — but the landscape is fragmented across registries, directories, and framework-specific taxonomies. al-dente solves this by doing one thing precisely: maintaining a **high-signal, curated, evolving map** that shows both the current state and the direction of travel.
 
 The philosophy is simple: cook it firm to the bite. High signal, low noise. Curated over exhaustive. Extensible without being bloated. *Al dente.*
+
+### About OKF
+
+al-dente stores its data in the **Open Knowledge Format (OKF)** — an open, vendor-neutral specification published by [Google Cloud](https://github.com/GoogleCloudPlatform/knowledge-catalog) in June 2026. OKF formalizes the "LLM wiki" pattern into a portable standard: a directory of Markdown files with YAML frontmatter, where each file represents one concept. The spec requires exactly one field (`type`) and leaves everything else to the producer.
+
+We did not create OKF. We use it. Our data follows OKF v0.1 ([spec](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)) and layers domain-specific conventions on top — entity types like `MCP-Server` and `Skill`, relations like `realizes` and `commonly_composed_with`, and quality tiers. The minimal base is Google's. The agentic-engineering shape on top is ours.
+
+> **OKF spec**: [`GoogleCloudPlatform/knowledge-catalog/okf/SPEC.md`](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)  
+> **OKF authors**: Sam McVeety & Amir Hormati (Google Cloud Data Cloud team)  
+> **OKF license**: Apache 2.0
 
 ---
 
@@ -51,17 +61,16 @@ al-dente/
 │   ├── patterns/       # Agentic design patterns
 │   ├── publishers/     # Publishers and maintainers
 │   ├── snapshots/      # Point-in-time captures
-│   └── index.md        # Entry point for navigation
-├── ontology/           # OKF schema definitions and validation rules
+│   └── index.md        # Bundle entry point (OKF convention)
+├── ontology/           # al-dente schema: entity types & validation rules on top of OKF
 ├── pipeline/           # Automation scripts (discover → enrich → build → deploy)
-│   ├── discover/
-│   ├── enrich/
-│   ├── build/
-│   ├── views/          # View generators (graph, register, dashboard, ...)
-│   └── snapshot/
+│   ├── build_okf.py    # Validates + compiles OKF data to JSON/JS bundles
+│   └── views/          # View generators (graph, register, dashboard, ...)
 ├── docs/               # GitHub Pages source (interactive views)
-│   ├── assets/
-│   └── _config.yml
+│   ├── index.html      # Dashboard
+│   ├── register.html   # Searchable table
+│   ├── graph.html      # D3.js knowledge graph
+│   └── assets/
 ├── prd.md              # Product Requirements Document
 ├── design-system.md    # Visual design & representation guidelines
 ├── spec.md             # Technical specification (data model, pipeline, architecture)
@@ -77,14 +86,16 @@ al-dente/
 
 ### Browse the Data
 
-The OKF data lives in `data/` as plain Markdown files. Every entity is a file. Open any `.md` file to see structured YAML frontmatter + human-readable description. That's it. No build step needed to explore.
+The OKF bundle lives in `data/` as plain Markdown files. Every entity is a file. Open any `.md` file to see structured YAML frontmatter + human-readable description. That's it. No build step needed to explore.
 
 ```bash
 # Clone and explore
 git clone https://github.com/al-dente-dev/al-dente.git
 cd al-dente
-cat data/mcp-servers/official-github-mcp-server.md
+cat data/mcp-servers/github.md
 ```
+
+Every file follows the OKF format: YAML frontmatter (with at minimum a `type` field) + Markdown body. See Google's [OKF spec](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) for the base format, and `ontology/schema.yaml` for al-dente's domain-specific extensions.
 
 ### Run the Pipeline Locally
 
@@ -107,7 +118,7 @@ The fastest way to help: add a new `.md` file in the appropriate `data/` subdire
 
 ## Core Principles
 
-- **Data-first (OKF)** — Knowledge as Markdown+YAML. Git-versioned, diffable, `cat`-able, agent-ingestible. Views are *projections* of the data, not the source of truth.
+- **Data-first (OKF)** — Knowledge as Markdown+YAML, stored in Google's Open Knowledge Format. Git-versioned, diffable, `cat`-able, agent-ingestible. Views are *projections* of the data, not the source of truth.
 - **GitHub-native** — The repo IS the knowledge base. Actions, Pages, Projects, Discussions — all first-class. Low operational overhead, high community accessibility.
 - **Dual & Integrated** — MCP Servers and Skills modeled symmetrically with rich cross-linking (`realizes`, `realized_by`, `commonly_composed_with`).
 - **Temporal & Directional** — Snapshots and diffs make change visible: new servers, emerging patterns, shifting concentrations. You can see where the field is heading, not just where it is.
@@ -124,6 +135,14 @@ The fastest way to help: add a new `.md` file in the appropriate `data/` subdire
 | [Design System](design-system.md) | Visual language, representation styles, and component guidelines |
 | [Specification](spec.md) | Technical architecture, data model, pipeline design, and extensibility |
 | [Roadmap](roadmap.md) | Phased delivery plan from foundation to community-driven public good |
+
+---
+
+## Acknowledgments
+
+- **Open Knowledge Format (OKF)** — [Google Cloud](https://github.com/GoogleCloudPlatform/knowledge-catalog). The foundation this project builds on. Sam McVeety and Amir Hormati for the spec.
+- **Model Context Protocol (MCP)** — [Anthropic](https://github.com/modelcontextprotocol). The protocol that makes agentic tool interoperability possible.
+- **Andrej Karpathy** — For the [LLM Wiki](https://gist.github.com/karpathy/442ab79d716ee8ca7a9dcdd3f8ea5ac0) pattern that OKF formalized.
 
 ---
 

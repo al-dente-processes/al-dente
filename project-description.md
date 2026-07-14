@@ -2,7 +2,9 @@
 
 **Precise. Data-first. GitHub-native.**
 
-al-dente is the living, open register of the agentic engineering ecosystem — mapped as **Open Knowledge Format (OKF)** bundles.
+al-dente is the living, open register of the agentic engineering ecosystem — stored as **Open Knowledge Format (OKF)** bundles.
+
+[OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) is an open specification published by Google Cloud (June 2026) for representing knowledge as Markdown files with YAML frontmatter. al-dente is a producer and consumer of OKF — we did not create the format; we use it and extend it for the agentic engineering domain.
 
 It provides a canonical, versionable, human- and agent-readable source of truth for:
 
