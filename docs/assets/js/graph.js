@@ -82,34 +82,54 @@
       nodeMap.set(entity.id, node);
     });
 
-    // Create links from relations
-    Object.values(entities).forEach(entity => {
-      if (!entity.relations) return;
+    // Create links from flat edges array (if available from build_okf.py)
+    // Falls back to parsing entity.relations for backward compatibility
+    const bundleEdges = DATA.edges || [];
 
-      Object.entries(entity.relations).forEach(([relType, targets]) => {
-        if (!Array.isArray(targets)) return;
-
-        targets.forEach(targetId => {
-          const source = nodeMap.get(entity.id);
-          const target = nodeMap.get(targetId);
-
-          if (source && target) {
-            // Avoid duplicate links
-            const exists = links.some(l =>
-              (l.source === source.id && l.target === target.id) ||
-              (l.source === target.id && l.target === source.id)
-            );
-            if (!exists) {
-              links.push({
-                source: source.id,
-                target: target.id,
-                relationType: relType
-              });
-            }
+    if (bundleEdges.length > 0) {
+      bundleEdges.forEach(edge => {
+        const source = nodeMap.get(edge.source);
+        const target = nodeMap.get(edge.target);
+        if (source && target) {
+          const exists = links.some(l =>
+            (l.source === source.id && l.target === target.id) ||
+            (l.source === target.id && l.target === source.id)
+          );
+          if (!exists) {
+            links.push({
+              source: source.id,
+              target: target.id,
+              relationType: edge.type
+            });
           }
+        }
+      });
+    } else {
+      // Fallback: parse relations from individual entities
+      Object.values(entities).forEach(entity => {
+        if (!entity.relations) return;
+        Object.entries(entity.relations).forEach(([relType, targets]) => {
+          if (!Array.isArray(targets)) return;
+          targets.forEach(targetId => {
+            const source = nodeMap.get(entity.id);
+            const target = nodeMap.get(targetId);
+            if (source && target) {
+              const exists = links.some(l =>
+                (l.source === source.id && l.target === target.id) ||
+                (l.source === target.id && l.target === source.id)
+              );
+              if (!exists) {
+                links.push({
+                  source: source.id,
+                  target: target.id,
+                  relationType: relType
+                });
+              }
+            }
+          });
         });
       });
-    });
+    }
 
     return { nodes, links };
   }

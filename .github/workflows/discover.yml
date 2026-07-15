@@ -36,6 +36,16 @@ on:
         required: false
         default: false
         type: boolean
+      bootstrap:
+        description: "Bootstrap mode — unlimited servers + full skill taxonomy"
+        required: false
+        default: false
+        type: boolean
+      max_servers:
+        description: "Max servers per run (ignored in bootstrap mode)"
+        required: false
+        default: 50
+        type: number
       max_pages:
         description: "Max registry pages to crawl"
         required: false
@@ -49,12 +59,17 @@ concurrency:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
   pull-requests: write
 
 jobs:
   discover:
     name: Discover & Quality Gate
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       # 1. Checkout repository
@@ -83,8 +98,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PRESET="${{ github.event.inputs.preset || 'balanced' }}"
+
+          # Determine mode: bootstrap on manual trigger if requested, else weekly
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.bootstrap }}" == "true" ]]; then
+            MODE_FLAG="--bootstrap"
+            echo "Running in BOOTSTRAP mode (unlimited)"
+          else
+            MODE_FLAG="--max-servers ${{ github.event.inputs.max_servers || '50' }}"
+            echo "Running in incremental mode ($MODE_FLAG)"
+          fi
+
           python -m pipeline.discover.runner \
             --preset "$PRESET" \
+            $MODE_FLAG \
             2>&1 | tee discovery.log
 
           # Extract stats from DISCOVERY_STATS line
@@ -95,10 +121,12 @@ jobs:
           PASSED=$(echo "$STATS_LINE" | grep -oP 'passed=\K[0-9]+' || echo "0")
           ADDED=$(echo "$STATS_LINE" | grep -oP 'added=\K[0-9]+' || echo "0")
           UPDATED=$(echo "$STATS_LINE" | grep -oP 'updated=\K[0-9]+' || echo "0")
+          SKILLS=$(echo "$STATS_LINE" | grep -oP 'skills=\K[0-9]+' || echo "0")
 
           echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
           echo "added=$ADDED" >> "$GITHUB_OUTPUT"
           echo "updated=$UPDATED" >> "$GITHUB_OUTPUT"
+          echo "skills=$SKILLS" >> "$GITHUB_OUTPUT"
 
       # 5. Check for changes
       - name: Check for changes
@@ -121,7 +149,7 @@ jobs:
         run: |
           git config user.name "al-dente-bot"
           git config user.email "bot@al-dente.dev"
-          git commit -m "auto: discover servers (${{ steps.discovery.outputs.passed }} passed, ${{ steps.discovery.outputs.added }} added) [skip ci]"
+          git commit -m "auto: discover servers (${{ steps.discovery.outputs.passed }} passed, ${{ steps.discovery.outputs.added }} added, ${{ steps.discovery.outputs.skills }} skills)"
 
       # 7. Create Pull Request (on schedule)
       - name: Create Pull Request
@@ -165,7 +193,26 @@ jobs:
         if: steps.git-check.outputs.changed == 'true' && github.event.inputs.dry_run != 'true' && github.event_name == 'workflow_dispatch'
         run: git push origin main
 
-      # 9. Summary
+      # 9. Build OKF + deploy to Pages (GITHUB_TOKEN push doesn't trigger other workflows)
+      - name: Build OKF bundle
+        if: steps.git-check.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          python -m pipeline.build_okf \
+            --input data \
+            --output docs/assets/js
+
+      - name: Upload Pages artifact
+        if: steps.git-check.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        if: steps.git-check.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      # 10. Summary
       - name: Summary
         run: |
           echo "## Discovery Results" >> "$GITHUB_STEP_SUMMARY"
@@ -176,5 +223,7 @@ jobs:
           echo "| Servers passed gate | ${{ steps.discovery.outputs.passed }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| New files | ${{ steps.discovery.outputs.added }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Updated files | ${{ steps.discovery.outputs.updated }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Skills generated | ${{ steps.discovery.outputs.skills }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Changes committed | ${{ steps.git-check.outputs.changed == 'true' && 'Yes' || 'No' }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Dry run | ${{ github.event.inputs.dry_run == 'true' && 'Yes' || 'No' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Bootstrap | ${{ github.event.inputs.bootstrap == 'true' && 'Yes' || 'No' }} |" >> "$GITHUB_STEP_SUMMARY"

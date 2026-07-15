@@ -303,6 +303,9 @@ def _assemble_bundle(entities: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Assemble the final OKF bundle structure from validated parsed entities.
 
+    Builds entities index, type/category indexes, and a flat edges array
+    for graph visualization.
+
     Args:
         entities: List of parsed entity dicts.
 
@@ -338,6 +341,56 @@ def _assemble_bundle(entities: list[dict[str, Any]]) -> dict[str, Any]:
             if cat:
                 by_category.setdefault(cat, []).append(eid)
 
+    # Build flat edges array for graph visualization
+    edges: list[dict[str, str]] = []
+    _RELATION_TYPES = {
+        "realizes_skills": "realizes",
+        "realized_by": "realized_by",
+        "commonly_composed_with": "composes_with",
+        "belongs_to": "belongs_to",
+        "exposes": "exposes",
+        "exemplified_by": "exemplifies",
+        "related_to": "related_to",
+        "publishes": "publishes",
+    }
+
+    for eid, ent in entities_index.items():
+        relations = ent.get("relations", {})
+        if not isinstance(relations, dict):
+            continue
+
+        for rel_field, targets in relations.items():
+            rel_type = _RELATION_TYPES.get(rel_field, rel_field)
+            if not isinstance(targets, list):
+                targets = [targets] if targets else []
+            for target_id in targets:
+                if target_id and target_id in entities_index:
+                    edges.append({
+                        "source": eid,
+                        "target": target_id,
+                        "type": rel_type,
+                    })
+
+        # Also extract skills_realized as edges
+        skills_realized = ent.get("skills_realized", [])
+        if isinstance(skills_realized, list):
+            for skill_id in skills_realized:
+                if skill_id and skill_id in entities_index:
+                    edges.append({
+                        "source": eid,
+                        "target": skill_id,
+                        "type": "realizes",
+                    })
+
+    # Deduplicate edges
+    seen = set()
+    unique_edges = []
+    for edge in edges:
+        key = (edge["source"], edge["target"], edge["type"])
+        if key not in seen:
+            seen.add(key)
+            unique_edges.append(edge)
+
     # Sort all index lists for deterministic output
     for t in by_type:
         by_type[t].sort()
@@ -354,12 +407,14 @@ def _assemble_bundle(entities: list[dict[str, Any]]) -> dict[str, Any]:
         "version": "0.1.0",
         "entityCount": len(entities_index),
         "countsByType": counts_by_type,
+        "edgeCount": len(unique_edges),
     }
 
     bundle: dict[str, Any] = {
         "entities": entities_index,
         "byType": by_type,
         "byCategory": by_category,
+        "edges": unique_edges,
         "metadata": metadata,
     }
 
